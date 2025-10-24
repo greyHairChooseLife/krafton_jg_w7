@@ -1,0 +1,50 @@
+session_name: jg-W7-mallocLab
+start_directory: /home/sy/jg/03.c-language/me/w7
+suppress_history: false
+windows:
+  - window_name: document
+    focus: true
+    panes:
+      - shell_command: vi -c 'cd ~/Documents/dev-wiki | VimwikiIndex'
+      - shell_command: vi README.md
+
+  - window_name: code & build
+    layout: e15c,240x66,0,0{186x66,0,0,114,53x66,187,0,115}
+    panes:
+      - shell_command:
+          - tm.1_title 'editor'
+          - vi .
+        focus: true
+
+  - window_name: debug
+    panes:
+      - shell_command:
+          - tm.1_title 'debugger'
+          - cmd: "gdb"
+            enter: false
+
+  - window_name: docker
+    layout: main-vertical
+    options:
+      main-pane-width: 60%
+    panes:
+      - shell_command:
+          - tm.1_title 'current container'
+          - docker exec -it jg-c-w7 bash
+          - ls -l
+        focus: true
+      - shell_command: vi config/Dockerfile
+      - shell_command:
+          - tm.1_title 'build image'
+          - cmd: docker build -t jg-c-w7 config/
+            enter: false
+      - shell_command:
+          - tm.1_title 'run daemon container'
+          - cmd: docker run -d --name jg-c-w7 -v "$(git-root)/:/workspace" --network=host jg-c-w7
+            enter: false
+      - shell_command: lazydocker
+
+  - window_name: config
+    layout: even-horizontal
+    panes:
+      - shell_command: vi config/tmuxp.yaml
