@@ -3,7 +3,8 @@ FROM ubuntu:22.04
 
 # Install dependencies if needed
 # install libc6-dev-i386 hence it provides /usr/include/bits/wordsize.h which is required building mdriver
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential gdbserver valgrind make systemd-coredump libc6-dev-i386
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential gdbserver valgrind make systemd-coredump libc6-dev-i386 fzf
+RUN echo "alias t='cd /workspace && ./test.sh'" >> ~/.bashrc
 
 # Set the working directory to /workspace
 WORKDIR /workspace
