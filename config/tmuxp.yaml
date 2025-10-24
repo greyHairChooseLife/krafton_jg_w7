@@ -3,6 +3,7 @@ start_directory: /home/sy/jg/03.c-language/me/w7
 suppress_history: false
 windows:
   - window_name: document
+    layout: even-horizontal
     focus: true
     panes:
       - shell_command: vi -c 'cd ~/Documents/dev-wiki | VimwikiIndex'
@@ -24,12 +25,14 @@ windows:
             enter: false
 
   - window_name: docker
-    layout: main-vertical
-    options:
-      main-pane-width: 60%
+    layout: f70e,240x65,0,0{107x65,0,0,315,107x65,108,0,325,24x65,216,0[24x15,216,0,316,24x15,216,16,317,24x15,216,32,318,24x17,216,48,319]}
     panes:
       - shell_command:
           - tm.1_title 'current container'
+          - docker exec -it jg-c-w7 bash
+          - t
+      - shell_command:
+          - tm.1_title 'current container 2'
           - docker exec -it jg-c-w7 bash
           - ls -l
         focus: true
