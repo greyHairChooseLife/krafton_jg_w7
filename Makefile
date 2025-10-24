@@ -22,7 +22,8 @@ ftimer.o: ftimer.c ftimer.h config.h
 clock.o: clock.c clock.h
 
 handin:
-	cp mm.c $(HANDINDIR)/$(TEAM)-$(VERSION)-mm.c
+	@echo "not for me"
+	# cp mm.c $(HANDINDIR)/$(TEAM)-$(VERSION)-mm.c
 
 clean:
 	rm -f *~ *.o mdriver
