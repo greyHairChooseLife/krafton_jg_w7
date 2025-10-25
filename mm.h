@@ -15,12 +15,13 @@ typedef struct {
 
 extern team_t team;
 
-// mm_init - initialize the malloc package.
+// initialize the malloc package.
+// Returns 0 on success, -1 on failure.
 extern int mm_init(void);
-// mm_malloc - Allocate a block by incrementing the brk pointer.
-//     Always allocate a block whose size is a multiple of the alignment.
+// Allocate a block by incrementing the brk pointer.
+// Always allocate a block whose size is a multiple of the alignment.
 extern void* mm_malloc(size_t size);
-// mm_free - Freeing a block does nothing.
+// Freeing a block does nothing.
 extern void mm_free(void* ptr);
-// mm_realloc - Implemented simply in terms of mm_malloc and mm_free
+// Implemented simply in terms of mm_malloc and mm_free
 extern void* mm_realloc(void* ptr, size_t size);
