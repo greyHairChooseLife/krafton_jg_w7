@@ -1,10 +1,5 @@
 #include <stdio.h>
 
-extern int mm_init(void);
-extern void* mm_malloc(size_t size);
-extern void mm_free(void* ptr);
-extern void* mm_realloc(void* ptr, size_t size);
-
 /*
  * Students work in teams of one or two.  Teams enter their team name,
  * personal names and login IDs in a struct of this
@@ -19,3 +14,13 @@ typedef struct {
 } team_t;
 
 extern team_t team;
+
+// mm_init - initialize the malloc package.
+extern int mm_init(void);
+// mm_malloc - Allocate a block by incrementing the brk pointer.
+//     Always allocate a block whose size is a multiple of the alignment.
+extern void* mm_malloc(size_t size);
+// mm_free - Freeing a block does nothing.
+extern void mm_free(void* ptr);
+// mm_realloc - Implemented simply in terms of mm_malloc and mm_free
+extern void* mm_realloc(void* ptr, size_t size);

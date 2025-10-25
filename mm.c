@@ -19,15 +19,10 @@ team_t team = {
     /* Second member's email address (leave blank if none) */
     ""};
 
-// mm_init - initialize the malloc package.
 int mm_init(void) { return 0; }
 
-// mm_malloc - Allocate a block by incrementing the brk pointer.
-//     Always allocate a block whose size is a multiple of the alignment.
 void* mm_malloc(size_t size) { return NULL; }
 
-// mm_free - Freeing a block does nothing.
 void mm_free(void* ptr) {}
 
-// mm_realloc - Implemented simply in terms of mm_malloc and mm_free
 void* mm_realloc(void* ptr, size_t size) { return NULL; }
