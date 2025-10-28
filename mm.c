@@ -168,7 +168,10 @@ void mm_free(void* ptr) {
 }
 
 void* mm_realloc(void* ptr, size_t size) {
-    if (!size) return NULL;
+    if (!size) {
+        mm_free(ptr);
+        return NULL;
+    }
 
     size_t currSize = GET_SIZE(HEADER_P(ptr));
     size_t asize = DSIZE * ((size + DSIZE + (DSIZE - 1)) / DSIZE);
@@ -185,9 +188,10 @@ void* mm_realloc(void* ptr, size_t size) {
         return ptr;
     }
 
-    // check if adjacent blocks are free
-    // find smallest
-    // not enough for asize => mm_malloc
+    /* // check if adjacent blocks are free */
+    /* // find smallest */
+    /* // not enough for asize => mm_malloc */
+    void* newPtr;
     size_t prevAlloc = GET_ALLOC(FOOTER_P(PREV_BP(ptr)));
     size_t prevSize = GET_SIZE(FOOTER_P(PREV_BP(ptr)));
     size_t nextAlloc = GET_ALLOC(HEADER_P(NEXT_BP(ptr)));
@@ -199,28 +203,26 @@ void* mm_realloc(void* ptr, size_t size) {
 
     char unionBlock = 0;
 
-    if (!prevAlloc && withPrevSize >= asize) unionBlock = 'p';
+    /* if (!prevAlloc && withPrevSize >= asize) unionBlock = 'p'; */
     if ((!nextAlloc && withNextSize >= asize && withNextSize < withPrevSize) ||
         (!nextAlloc && withNextSize >= asize && !unionBlock))
         unionBlock = 'n';
-    if (!prevAlloc && !nextAlloc && withBothSize >= asize) unionBlock = 'b';
+    /* if (!prevAlloc && !nextAlloc && withBothSize >= asize) unionBlock = 'b';
+     */
 
-    void* newPtr;
-    if (unionBlock == 'p' || unionBlock == 'b') {
-        newPtr = PREV_BP(ptr);
-        place(newPtr, asize);
-        memcpy(newPtr, ptr, currSize - DSIZE);
-        return newPtr;
-    }
-
+    /* if (unionBlock == 'p' || unionBlock == 'b') { */
+    /*     newPtr = PREV_BP(ptr); */
+    /*     place(newPtr, asize); */
+    /*     memcpy(newPtr, ptr, currSize - DSIZE); */
+    /*     return newPtr; */
+    /* } */
     if (unionBlock == 'n') {
-        /* newPtr = NEXT_BP(ptr); */
+        PUT_COMBI(HEADER_P(ptr), COMBINE(withNextSize, 0));
         place(ptr, asize);
-        /* memcpy(newPtr, ptr, currSize - DSIZE); */
         return ptr;
     }
 
-    newPtr = mm_malloc(asize);
+    newPtr = mm_malloc(size);
     memcpy(newPtr, ptr, currSize - DSIZE);
     mm_free(ptr);
     return newPtr;
