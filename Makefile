@@ -7,11 +7,20 @@ HANDINDIR = /afs/cs.cmu.edu/academic/class/15213-f01/malloclab/handin
 
 CC = gcc
 CFLAGS = -Wall -O2 -m32
+DEBUG_CFLAGS = -Wall -g -O0 -m32
 
 OBJS = mdriver.o mm.o memlib.o fsecs.o fcyc.o clock.o ftimer.o
 
+help:
+	@echo "make m: mdriver"
+	@echo "make d: debug mode"
+
 mdriver: $(OBJS)
 	$(CC) $(CFLAGS) -o mdriver $(OBJS)
+
+mdriver-debug: CFLAGS = $(DEBUG_CFLAGS)
+mdriver-debug: $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS)
 
 mdriver.o: mdriver.c fsecs.h fcyc.h clock.h memlib.h config.h mm.h
 memlib.o: memlib.c memlib.h
@@ -26,6 +35,9 @@ handin:
 	# cp mm.c $(HANDINDIR)/$(TEAM)-$(VERSION)-mm.c
 
 clean:
-	rm -f *~ *.o mdriver
+	rm -f *~ *.o mdriver mdriver-debug
 
 
+.PHONY: m d
+m: mdriver
+d: mdriver-debug
