@@ -13,7 +13,7 @@ team_t team = {
     /* First member's full name */
     "no-one",
     /* First member's email address */
-    "",
+    "no-one",
     /* Second member's full name (leave blank if none) */
     "",
     /* Second member's email address (leave blank if none) */
@@ -24,6 +24,7 @@ team_t team = {
 #define CHUNKSIZE (1 << 12)  // 4KB, heap extending size
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
+#define MIN(x, y) ((x) > (y) ? (y) : (x))
 #define COMBINE(blockSize, allocBit) ((blockSize) | (allocBit))
 
 // read & write combination of <size + allocation bit> by reading word size
@@ -39,8 +40,8 @@ team_t team = {
 #define FOOTER_P(ptr) ((char*)(ptr) + GET_SIZE(HEADER_P(ptr)) - DSIZE)
 
 // given block ptr, get address of <next & prev> block's, which is BlockPtr
-#define NEXT_BP(ptr) ((char*)(ptr) + GET_SIZE(((char*)(bp) - WSIZE)))
-#define PREV_BP(ptr) ((char*)(ptr) - GET_SIZE(((char*)(bp) - DSIZE)))
+#define NEXT_BP(ptr) ((char*)(ptr) + GET_SIZE(((char*)(ptr) - WSIZE)))
+#define PREV_BP(ptr) ((char*)(ptr) - GET_SIZE(((char*)(ptr) - DSIZE)))
 
 static char* heap_listp;  // heap area starting point
 
@@ -124,8 +125,8 @@ static void place(void* bp, size_t asize) {
         PUT_COMBI(HEADER_P(bp), COMBINE(asize, 1));
         PUT_COMBI(FOOTER_P(bp), COMBINE(asize, 1));
         bp = NEXT_BP(bp);
-        PUT_COMBI(HEADER_P(bp), COMBINE(csize - asize, 1));
-        PUT_COMBI(FOOTER_P(bp), COMBINE(csize - asize, 1));
+        PUT_COMBI(HEADER_P(bp), COMBINE(csize - asize, 0));
+        PUT_COMBI(FOOTER_P(bp), COMBINE(csize - asize, 0));
     } else {
         PUT_COMBI(HEADER_P(bp), COMBINE(csize, 1));
         PUT_COMBI(FOOTER_P(bp), COMBINE(csize, 1));
@@ -157,6 +158,70 @@ void* mm_malloc(size_t size) {
     return bp;
 }
 
-void mm_free(void* ptr) {}
+void mm_free(void* ptr) {
+    size_t size = GET_SIZE(HEADER_P(ptr));
 
-void* mm_realloc(void* ptr, size_t size) { return NULL; }
+    PUT_COMBI(HEADER_P(ptr), COMBINE(size, 0));
+    PUT_COMBI(FOOTER_P(ptr), COMBINE(size, 0));
+
+    coalesce(ptr);
+}
+
+void* mm_realloc(void* ptr, size_t size) {
+    if (!size) return NULL;
+
+    size_t currSize = GET_SIZE(HEADER_P(ptr));
+    size_t asize = DSIZE * ((size + DSIZE + (DSIZE - 1)) / DSIZE);
+
+    if (asize == currSize) return ptr;
+    if (asize < currSize) {
+        PUT_COMBI(HEADER_P(ptr), COMBINE(asize, 1));
+        PUT_COMBI(FOOTER_P(ptr), COMBINE(asize, 1));
+        if (currSize - asize >= 2 * DSIZE) {
+            void* next = NEXT_BP(ptr);
+            PUT_COMBI(HEADER_P(next), COMBINE(currSize - asize, 0));
+            PUT_COMBI(FOOTER_P(next), COMBINE(currSize - asize, 0));
+        }
+        return ptr;
+    }
+
+    // check if adjacent blocks are free
+    // find smallest
+    // not enough for asize => mm_malloc
+    size_t prevAlloc = GET_ALLOC(FOOTER_P(PREV_BP(ptr)));
+    size_t prevSize = GET_SIZE(FOOTER_P(PREV_BP(ptr)));
+    size_t nextAlloc = GET_ALLOC(HEADER_P(NEXT_BP(ptr)));
+    size_t nextSize = GET_SIZE(HEADER_P(NEXT_BP(ptr)));
+
+    size_t withPrevSize = currSize + prevSize;
+    size_t withNextSize = currSize + nextSize;
+    size_t withBothSize = currSize + prevSize + nextSize;
+
+    char unionBlock = 0;
+
+    if (!prevAlloc && withPrevSize >= asize) unionBlock = 'p';
+    if ((!nextAlloc && withNextSize >= asize && withNextSize < withPrevSize) ||
+        (!nextAlloc && withNextSize >= asize && !unionBlock))
+        unionBlock = 'n';
+    if (!prevAlloc && !nextAlloc && withBothSize >= asize) unionBlock = 'b';
+
+    void* newPtr;
+    if (unionBlock == 'p' || unionBlock == 'b') {
+        newPtr = PREV_BP(ptr);
+        place(newPtr, asize);
+        memcpy(newPtr, ptr, currSize - DSIZE);
+        return newPtr;
+    }
+
+    if (unionBlock == 'n') {
+        /* newPtr = NEXT_BP(ptr); */
+        place(ptr, asize);
+        /* memcpy(newPtr, ptr, currSize - DSIZE); */
+        return ptr;
+    }
+
+    newPtr = mm_malloc(asize);
+    memcpy(newPtr, ptr, currSize - DSIZE);
+    mm_free(ptr);
+    return newPtr;
+}
