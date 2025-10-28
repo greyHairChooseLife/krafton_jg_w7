@@ -44,6 +44,9 @@ mdriver
 *.su
 *.idb
 *.pdb
+cw
+dbg.log
+mdriver-debug
 
 # Kernel Module Compile Results
 *.mod*
@@ -53,3 +56,5 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
