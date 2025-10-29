@@ -56,7 +56,8 @@ double get_counter() {
     borrow = lo > ncyc_lo;
     hi = ncyc_hi - cyc_hi - borrow;
     result = (double)hi * (1 << 30) * 4 + lo;
-    if (result < 0) {
+    if (result < 0)
+    {
         fprintf(stderr, "Error: counter returns neg value: %.0f\n", result);
     }
     return result;
@@ -110,7 +111,8 @@ double get_counter() {
     borrow = lo > ncyc_lo;
     hi = ncyc_hi - cyc_hi - borrow;
     result = (double)hi * (1 << 30) * 4 + lo;
-    if (result < 0) {
+    if (result < 0)
+    {
         fprintf(stderr, "Error: Cycle counter returning negative value: %.0f\n",
                 result);
     }
@@ -150,7 +152,8 @@ double ovhd() {
     int i;
     double result;
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 2; i++)
+    {
         start_counter();
         result = get_counter();
     }
@@ -193,14 +196,17 @@ static void callibrate(int verbose) {
     oldc = t.tms_utime;
     start_counter();
     oldt = get_counter();
-    while (e < NEVENT) {
+    while (e < NEVENT)
+    {
         double newt = get_counter();
 
-        if (newt - oldt >= THRESHOLD) {
+        if (newt - oldt >= THRESHOLD)
+        {
             clock_t newc;
             times(&t);
             newc = t.tms_utime;
-            if (newc > oldc) {
+            if (newc > oldc)
+            {
                 double cpt = (newt - oldt) / (newc - oldc);
                 if ((cyc_per_tick == 0.0 || cyc_per_tick > cpt) &&
                     cpt > RECORDTHRESH)

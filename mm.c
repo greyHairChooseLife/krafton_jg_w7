@@ -71,17 +71,21 @@ static void checker(char* isExtended, size_t size) {
     else
         asize = DSIZE * ((size + DSIZE + (DSIZE - 1)) / DSIZE);
 
-    do {
+    do
+    {
         blockCount++;
         int curAlloc = GET_ALLOC(HEADER_P(ptrCurr));
         int curSize = GET_SIZE(HEADER_P(ptrCurr));
 
-        if (curAlloc == 1) {
+        if (curAlloc == 1)
+        {
             allocCount++;
             allocAmount += curSize;
             blocks[idx].kinds = "allocated";
             blocks[idx].sizes = curSize;
-        } else {
+        }
+        else
+        {
             freeCount++;
             freeAmount += curSize;
             blocks[idx].kinds = "free";
@@ -92,9 +96,12 @@ static void checker(char* isExtended, size_t size) {
         ptrCurr = NEXT_BP(ptrCurr);
     } while (!(GET_SIZE(HEADER_P(ptrCurr)) == 0 &&
                GET_ALLOC(HEADER_P(ptrCurr)) == 1));
+
     blocks[idx].kinds = "EPILOGUE";
     blocks[idx].sizes = GET_SIZE(HEADER_P(ptrCurr));
-    while (++idx < 15) {
+
+    while (++idx < 15)
+    {
         blocks[idx].kinds = "";
         blocks[idx].sizes = 0;
     }
@@ -112,20 +119,24 @@ static void* coalesce(void* bp) {
     size_t next_alloc = GET_ALLOC(HEADER_P(NEXT_BP(bp)));
     size_t size = GET_SIZE(HEADER_P(bp));
 
-    if (prev_alloc && next_alloc) {
-        return bp;
-    } else if (prev_alloc && !next_alloc) {
+    if (prev_alloc && next_alloc) return bp;
+
+    if (prev_alloc && !next_alloc)
+    {
         size += GET_SIZE(HEADER_P(NEXT_BP(bp)));
         PUT_COMBI(HEADER_P(bp), COMBINE(size, 0));
         PUT_COMBI(FOOTER_P(bp), COMBINE(size, 0));
-    } else if (!prev_alloc && next_alloc) {
+    }
+    else if (!prev_alloc && next_alloc)
+    {
         size += GET_SIZE(HEADER_P(PREV_BP(bp)));
         PUT_COMBI(FOOTER_P(bp), COMBINE(size, 0));  // no need to move
         PUT_COMBI(HEADER_P(PREV_BP(bp)),
                   COMBINE(size, 0));  // to the prev block
         bp = PREV_BP(bp);
-
-    } else {
+    }
+    else
+    {
         size +=
             GET_SIZE(HEADER_P(PREV_BP(bp))) + GET_SIZE(FOOTER_P(NEXT_BP(bp)));
         PUT_COMBI(HEADER_P(PREV_BP(bp)), COMBINE(size, 0));
@@ -183,13 +194,16 @@ static void place(void* bp, size_t asize) {
     size_t csize = GET_SIZE(HEADER_P(bp));
 
     // at least one minimal block, split it
-    if ((csize - asize) >= (2 * DSIZE)) {
+    if ((csize - asize) >= (2 * DSIZE))
+    {
         PUT_COMBI(HEADER_P(bp), COMBINE(asize, 1));
         PUT_COMBI(FOOTER_P(bp), COMBINE(asize, 1));
         bp = NEXT_BP(bp);
         PUT_COMBI(HEADER_P(bp), COMBINE(csize - asize, 0));
         PUT_COMBI(FOOTER_P(bp), COMBINE(csize - asize, 0));
-    } else {
+    }
+    else
+    {
         PUT_COMBI(HEADER_P(bp), COMBINE(csize, 1));
         PUT_COMBI(FOOTER_P(bp), COMBINE(csize, 1));
     }
@@ -207,7 +221,8 @@ void* mm_malloc(size_t size) {
     else
         asize = DSIZE * ((size + DSIZE + (DSIZE - 1)) / DSIZE);
 
-    if ((bp = find_fit(asize)) != NULL) {
+    if ((bp = find_fit(asize)) != NULL)
+    {
         place(bp, asize);
         checker("Found", size);
         return bp;
@@ -233,7 +248,8 @@ void mm_free(void* ptr) {
 }
 
 void* mm_realloc(void* ptr, size_t size) {
-    if (!size) {
+    if (!size)
+    {
         mm_free(ptr);
         return NULL;
     }
@@ -241,13 +257,16 @@ void* mm_realloc(void* ptr, size_t size) {
     size_t currSize = GET_SIZE(HEADER_P(ptr));
     size_t asize = DSIZE * ((size + DSIZE + (DSIZE - 1)) / DSIZE);
 
-    if (asize == currSize) {
+    if (asize == currSize)
+    {
         checker("Realloc - same case", size);
         return ptr;
     }
 
-    if (asize < currSize) {
-        if (currSize - asize >= 2 * DSIZE) {
+    if (asize < currSize)
+    {
+        if (currSize - asize >= 2 * DSIZE)
+        {
             PUT_COMBI(HEADER_P(ptr), COMBINE(asize, 1));
             PUT_COMBI(FOOTER_P(ptr), COMBINE(asize, 1));
             PUT_COMBI(HEADER_P(NEXT_BP(ptr)), COMBINE(currSize - asize, 0));
@@ -278,7 +297,8 @@ void* mm_realloc(void* ptr, size_t size) {
         unionBlock = 'n';
     if (!prevAlloc && !nextAlloc && withBothSize >= asize) unionBlock = 'b';
 
-    if (unionBlock == 'p' || unionBlock == 'b') {
+    if (unionBlock == 'p' || unionBlock == 'b')
+    {
         newPtr = PREV_BP(ptr);
         if (unionBlock == 'p')
             PUT_COMBI(HEADER_P(newPtr), COMBINE(withPrevSize, 0));
@@ -291,7 +311,9 @@ void* mm_realloc(void* ptr, size_t size) {
         checker("Realloc - bigger, sum prev block case", size);
         return newPtr;
     }
-    if (unionBlock == 'n') {
+
+    if (unionBlock == 'n')
+    {
         PUT_COMBI(HEADER_P(ptr), COMBINE(withNextSize, 0));
         place(ptr, asize);
         checker("Realloc - bigger, sum next block case", size);

@@ -63,10 +63,13 @@ static void init_sampler() {
  */
 static void add_sample(double val) {
     int pos = 0;
-    if (samplecount < kbest) {
+    if (samplecount < kbest)
+    {
         pos = samplecount;
         values[pos] = val;
-    } else if (val < values[kbest - 1]) {
+    }
+    else if (val < values[kbest - 1])
+    {
         pos = kbest - 1;
         values[pos] = val;
     }
@@ -75,7 +78,8 @@ static void add_sample(double val) {
 #endif
     samplecount++;
     /* Insertion sort */
-    while (pos > 0 && values[pos - 1] > values[pos]) {
+    while (pos > 0 && values[pos - 1] > values[pos])
+    {
         double temp = values[pos - 1];
         values[pos - 1] = values[pos];
         values[pos] = temp;
@@ -100,9 +104,11 @@ static void clear() {
     int x = sink;
     int *cptr, *cend;
     int incr = cache_block / sizeof(int);
-    if (!cache_buf) {
+    if (!cache_buf)
+    {
         cache_buf = malloc(cache_bytes);
-        if (!cache_buf) {
+        if (!cache_buf)
+        {
             fprintf(stderr,
                     "Fatal error.  Malloc returned null when trying to clear "
                     "cache\n");
@@ -111,7 +117,8 @@ static void clear() {
     }
     cptr = (int*)cache_buf;
     cend = cptr + cache_bytes / sizeof(int);
-    while (cptr < cend) {
+    while (cptr < cend)
+    {
         x += *cptr;
         cptr += incr;
     }
@@ -124,8 +131,10 @@ static void clear() {
 double fcyc(test_funct f, void* argp) {
     double result;
     init_sampler();
-    if (compensate) {
-        do {
+    if (compensate)
+    {
+        do
+        {
             double cyc;
             if (clear_cache) clear();
             start_comp_counter();
@@ -133,8 +142,11 @@ double fcyc(test_funct f, void* argp) {
             cyc = get_comp_counter();
             add_sample(cyc);
         } while (!has_converged() && samplecount < maxsamples);
-    } else {
-        do {
+    }
+    else
+    {
+        do
+        {
             double cyc;
             if (clear_cache) clear();
             start_counter();
@@ -175,9 +187,11 @@ void set_fcyc_clear_cache(int clear) { clear_cache = clear; }
  *     Default = 1<<19 (512KB)
  */
 void set_fcyc_cache_size(int bytes) {
-    if (bytes != cache_bytes) {
+    if (bytes != cache_bytes)
+    {
         cache_bytes = bytes;
-        if (cache_buf) {
+        if (cache_buf)
+        {
             free(cache_buf);
             cache_buf = NULL;
         }

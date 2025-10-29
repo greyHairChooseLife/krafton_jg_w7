@@ -24,7 +24,8 @@ static char* mem_max_addr;  /* largest legal heap address */
  */
 void mem_init(void) {
     /* allocate the storage we will use to model the available VM */
-    if ((mem_start_brk = (char*)malloc(MAX_HEAP)) == NULL) {
+    if ((mem_start_brk = (char*)malloc(MAX_HEAP)) == NULL)
+    {
         fprintf(stderr, "mem_init_vm: malloc error\n");
         exit(1);
     }
@@ -51,7 +52,8 @@ void mem_reset_brk() { mem_brk = mem_start_brk; }
 void* mem_sbrk(int incr) {
     char* old_brk = mem_brk;
 
-    if ((incr < 0) || ((mem_brk + incr) > mem_max_addr)) {
+    if ((incr < 0) || ((mem_brk + incr) > mem_max_addr))
+    {
         errno = ENOMEM;
         fprintf(stderr, "ERROR: mem_sbrk failed. Ran out of memory...\n");
         return (void*)-1;
