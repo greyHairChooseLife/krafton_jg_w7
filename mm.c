@@ -59,7 +59,7 @@ static void checker(char* isExtended, size_t size) {
     int freeAmount = 0;
     int allocCount = 0;
     int allocAmount = 0;
-    blockStat blocks[10];
+    blockStat blocks[15];
     int idx = 0;
 
     // adjusted block size
@@ -94,7 +94,7 @@ static void checker(char* isExtended, size_t size) {
                GET_ALLOC(HEADER_P(ptrCurr)) == 1));
     blocks[idx].kinds = "EPILOGUE";
     blocks[idx].sizes = GET_SIZE(HEADER_P(ptrCurr));
-    while (++idx < 10) {
+    while (++idx < 15) {
         blocks[idx].kinds = "";
         blocks[idx].sizes = 0;
     }
@@ -272,19 +272,25 @@ void* mm_realloc(void* ptr, size_t size) {
 
     char unionBlock = 0;
 
-    /* if (!prevAlloc && withPrevSize >= asize) unionBlock = 'p'; */
+    if (!prevAlloc && withPrevSize >= asize) unionBlock = 'p';
     if ((!nextAlloc && withNextSize >= asize && withNextSize < withPrevSize) ||
         (!nextAlloc && withNextSize >= asize && !unionBlock))
         unionBlock = 'n';
-    /* if (!prevAlloc && !nextAlloc && withBothSize >= asize) unionBlock = 'b';
-     */
+    if (!prevAlloc && !nextAlloc && withBothSize >= asize) unionBlock = 'b';
 
-    /* if (unionBlock == 'p' || unionBlock == 'b') { */
-    /*     newPtr = PREV_BP(ptr); */
-    /*     place(newPtr, asize); */
-    /*     memcpy(newPtr, ptr, currSize - DSIZE); */
-    /*     return newPtr; */
-    /* } */
+    if (unionBlock == 'p' || unionBlock == 'b') {
+        newPtr = PREV_BP(ptr);
+        if (unionBlock == 'p')
+            PUT_COMBI(HEADER_P(newPtr), COMBINE(withPrevSize, 0));
+        else
+            PUT_COMBI(HEADER_P(newPtr), COMBINE(withBothSize, 0));
+        /* memcpy(newPtr, ptr, currSize - DSIZE);
+         * overlapping region occurs Undefined-Behavior */
+        memmove(newPtr, ptr, currSize - DSIZE);
+        place(newPtr, asize);
+        checker("Realloc - bigger, sum prev block case", size);
+        return newPtr;
+    }
     if (unionBlock == 'n') {
         PUT_COMBI(HEADER_P(ptr), COMBINE(withNextSize, 0));
         place(ptr, asize);
