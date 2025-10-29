@@ -247,12 +247,11 @@ void* mm_realloc(void* ptr, size_t size) {
     }
 
     if (asize < currSize) {
-        PUT_COMBI(HEADER_P(ptr), COMBINE(asize, 1));
-        PUT_COMBI(FOOTER_P(ptr), COMBINE(asize, 1));
         if (currSize - asize >= 2 * DSIZE) {
-            void* next = NEXT_BP(ptr);
-            PUT_COMBI(HEADER_P(next), COMBINE(currSize - asize, 0));
-            PUT_COMBI(FOOTER_P(next), COMBINE(currSize - asize, 0));
+            PUT_COMBI(HEADER_P(ptr), COMBINE(asize, 1));
+            PUT_COMBI(FOOTER_P(ptr), COMBINE(asize, 1));
+            PUT_COMBI(HEADER_P(NEXT_BP(ptr)), COMBINE(currSize - asize, 0));
+            PUT_COMBI(FOOTER_P(NEXT_BP(ptr)), COMBINE(currSize - asize, 0));
         }
         checker("Realloc - less case", size);
         return ptr;
