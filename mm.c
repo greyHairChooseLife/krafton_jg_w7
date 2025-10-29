@@ -285,11 +285,12 @@ void* mm_realloc(void* ptr, size_t size) {
     /*     memcpy(newPtr, ptr, currSize - DSIZE); */
     /*     return newPtr; */
     /* } */
-    /* if (unionBlock == 'n') { */
-    /*     PUT_COMBI(HEADER_P(ptr), COMBINE(withNextSize, 0)); */
-    /*     place(ptr, asize); */
-    /*     return ptr; */
-    /* } */
+    if (unionBlock == 'n') {
+        PUT_COMBI(HEADER_P(ptr), COMBINE(withNextSize, 0));
+        place(ptr, asize);
+        checker("Realloc - bigger, sum next block case", size);
+        return ptr;
+    }
 
     newPtr = mm_malloc(size);
     memcpy(newPtr, ptr, currSize - DSIZE);
