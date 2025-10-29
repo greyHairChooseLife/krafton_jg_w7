@@ -45,6 +45,68 @@ team_t team = {
 
 static char* heap_listp;  // heap area starting point
 
+typedef struct {
+    char* kinds;
+    size_t sizes;
+} blockStat;
+
+static void checker(char* isExtended, size_t size) {
+    return;
+    void* ptrCurr = heap_listp + DSIZE;
+
+    int blockCount = 0;
+    int freeCount = 0;
+    int freeAmount = 0;
+    int allocCount = 0;
+    int allocAmount = 0;
+    blockStat blocks[10];
+    int idx = 0;
+
+    // adjusted block size
+    size_t asize;
+    if (strcmp(isExtended, "Free") == 0)
+        asize = size;
+    else if (size <= DSIZE)
+        asize = 2 * DSIZE;
+    else
+        asize = DSIZE * ((size + DSIZE + (DSIZE - 1)) / DSIZE);
+
+    do {
+        blockCount++;
+        int curAlloc = GET_ALLOC(HEADER_P(ptrCurr));
+        int curSize = GET_SIZE(HEADER_P(ptrCurr));
+
+        if (curAlloc == 1) {
+            allocCount++;
+            allocAmount += curSize;
+            blocks[idx].kinds = "allocated";
+            blocks[idx].sizes = curSize;
+        } else {
+            freeCount++;
+            freeAmount += curSize;
+            blocks[idx].kinds = "free";
+            blocks[idx].sizes = curSize;
+        }
+        idx++;
+
+        ptrCurr = NEXT_BP(ptrCurr);
+    } while (!(GET_SIZE(HEADER_P(ptrCurr)) == 0 &&
+               GET_ALLOC(HEADER_P(ptrCurr)) == 1));
+    blocks[idx].kinds = "EPILOGUE";
+    blocks[idx].sizes = GET_SIZE(HEADER_P(ptrCurr));
+    while (++idx < 10) {
+        blocks[idx].kinds = "";
+        blocks[idx].sizes = 0;
+    }
+
+    printf("(%s)REPORT: ------------------------ orig size (%zu) -> a (%zu)\n",
+           isExtended, size, asize);
+    for (int i = 0; i <= blockCount; i++)
+        printf("    %d: Kind = %s, Size = %zu\n", i, blocks[i].kinds,
+               blocks[i].sizes);
+    printf("\n");
+}
+
 static void* coalesce(void* bp) {
     size_t prev_alloc = GET_ALLOC(FOOTER_P(PREV_BP(bp)));
     size_t next_alloc = GET_ALLOC(HEADER_P(NEXT_BP(bp)));
@@ -147,6 +209,7 @@ void* mm_malloc(size_t size) {
 
     if ((bp = find_fit(asize)) != NULL) {
         place(bp, asize);
+        checker("Found", size);
         return bp;
     }
 
@@ -155,6 +218,7 @@ void* mm_malloc(size_t size) {
     if ((bp = extend_heap(extendSize / WSIZE)) == NULL) return NULL;
 
     place(bp, asize);
+    checker("Extend", size);
     return bp;
 }
 
@@ -165,6 +229,7 @@ void mm_free(void* ptr) {
     PUT_COMBI(FOOTER_P(ptr), COMBINE(size, 0));
 
     coalesce(ptr);
+    checker("Free", size);
 }
 
 void* mm_realloc(void* ptr, size_t size) {
@@ -176,7 +241,11 @@ void* mm_realloc(void* ptr, size_t size) {
     size_t currSize = GET_SIZE(HEADER_P(ptr));
     size_t asize = DSIZE * ((size + DSIZE + (DSIZE - 1)) / DSIZE);
 
-    if (asize == currSize) return ptr;
+    if (asize == currSize) {
+        checker("Realloc - same case", size);
+        return ptr;
+    }
+
     if (asize < currSize) {
         PUT_COMBI(HEADER_P(ptr), COMBINE(asize, 1));
         PUT_COMBI(FOOTER_P(ptr), COMBINE(asize, 1));
@@ -185,6 +254,7 @@ void* mm_realloc(void* ptr, size_t size) {
             PUT_COMBI(HEADER_P(next), COMBINE(currSize - asize, 0));
             PUT_COMBI(FOOTER_P(next), COMBINE(currSize - asize, 0));
         }
+        checker("Realloc - less case", size);
         return ptr;
     }
 
@@ -216,11 +286,11 @@ void* mm_realloc(void* ptr, size_t size) {
     /*     memcpy(newPtr, ptr, currSize - DSIZE); */
     /*     return newPtr; */
     /* } */
-    if (unionBlock == 'n') {
-        PUT_COMBI(HEADER_P(ptr), COMBINE(withNextSize, 0));
-        place(ptr, asize);
-        return ptr;
-    }
+    /* if (unionBlock == 'n') { */
+    /*     PUT_COMBI(HEADER_P(ptr), COMBINE(withNextSize, 0)); */
+    /*     place(ptr, asize); */
+    /*     return ptr; */
+    /* } */
 
     newPtr = mm_malloc(size);
     memcpy(newPtr, ptr, currSize - DSIZE);

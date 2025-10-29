@@ -574,6 +574,9 @@ static int eval_mm_valid(trace_t* trace, int tracenum, range_t** ranges) {
 
         switch (trace->ops[i].type) {
             case ALLOC: /* mm_malloc */
+                /* START_debug: */
+                printf("ALLOC: trace id: %d (%d)\n", index, size);
+                /* END___debug: */
 
                 /* Call the student's malloc */
                 if ((p = mm_malloc(size)) == NULL) {
@@ -601,6 +604,9 @@ static int eval_mm_valid(trace_t* trace, int tracenum, range_t** ranges) {
                 break;
 
             case REALLOC: /* mm_realloc */
+                /* START_debug: */
+                printf("REALLOC: trace id: %d (%d)\n", index, size);
+                /* END___debug: */
 
                 /* Call the student's realloc */
                 oldp = trace->blocks[index];
@@ -638,6 +644,9 @@ static int eval_mm_valid(trace_t* trace, int tracenum, range_t** ranges) {
                 break;
 
             case FREE: /* mm_free */
+                /* START_debug: */
+                printf("FREE: trace id: %d (%d)\n", index, size);
+                /* END___debug: */
 
                 /* Remove region from list and call student's free function */
                 p = trace->blocks[index];
